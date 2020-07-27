@@ -1,4 +1,5 @@
 mod ls;
+mod mkdir;
 mod osstr;
 mod touch;
 
@@ -98,7 +99,14 @@ fn run_with_args(busycrate: &OsStr, args: &[OsString]) -> Option<i32> {
                 .takes_value(true)
                 .multiple(true)
             )
+        )
+        .subcommand(SubCommand::with_name("mkdir")
+            .arg(Arg::with_name("dpaths")
+                .takes_value(true)
+                .multiple(true)
+            )
         );
+
     let matches = app.get_matches_from(args);
     if let Some(ls_args) = matches.subcommand_matches("ls") {
         let paths = if let Some(values) = ls_args.values_of_os("dirs") {
@@ -123,6 +131,18 @@ fn run_with_args(busycrate: &OsStr, args: &[OsString]) -> Option<i32> {
             paths
         };
         return Some(touch::main(touch_args))
+    } if let Some(mkdir_args) = matches.subcommand_matches("mkdir") {
+        let paths = if let Some(values) = mkdir_args.values_of_os("dpaths") {
+            map_os_args_to_path_vec(values)
+        } else {
+            Vec::new()
+        };
+
+        let mkdir_args = mkdir::Args {
+            create_parents: false,
+            paths,
+        };
+        return Some(mkdir::main(mkdir_args))
     } else {
         print_usage();
         return Some(1)
