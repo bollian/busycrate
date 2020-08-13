@@ -3,6 +3,14 @@ name = "busycrate"
 version = "0.1.0"
 authors = ["Ian Boll <iangboll@vt.edu>"]
 edition = "2018"
+license = "MPL-2.0"
+description = "BusyBox but in Rust"
+readme = "README.md"
+homepage = "https://github.com/bollian/busycrate"
+repository = "https://github.com/bollian/busycrate"
+documentation = "https://docs.rs/busycrate"
+categories = ["command-line-utilities"]
+keywords = ["cli", "utility", "unix"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
