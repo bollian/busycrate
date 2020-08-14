@@ -6,8 +6,8 @@
 
 mod ls;
 mod mkdir;
-mod touch;
 mod rmdir;
+mod touch;
 
 use std::ffi::{OsStr, OsString};
 use std::path::Path;
@@ -96,26 +96,38 @@ fn run_with_args(busycrate: &OsStr, args: &[OsString]) -> Option<i32> {
                 .arg(Arg::with_name("all").short("a").long("all")),
         )
         .subcommand(
-            SubCommand::with_name("touch")
-                .arg(Arg::with_name("files").takes_value(true).multiple(true).required(true)),
+            SubCommand::with_name("touch").arg(
+                Arg::with_name("files")
+                    .takes_value(true)
+                    .multiple(true)
+                    .required(true),
+            ),
         )
         .subcommand(
             SubCommand::with_name("mkdir")
-                .arg(Arg::with_name("dirs").takes_value(true).multiple(true).required(true))
+                .arg(
+                    Arg::with_name("dirs")
+                        .takes_value(true)
+                        .multiple(true)
+                        .required(true),
+                )
                 .arg(Arg::with_name("parents").long("parents").short("p")),
         )
         .subcommand(
-            SubCommand::with_name("rmdir")
-                .arg(Arg::with_name("dirs").takes_value(true).multiple(true).required(true))
+            SubCommand::with_name("rmdir").arg(
+                Arg::with_name("dirs")
+                    .takes_value(true)
+                    .multiple(true)
+                    .required(true),
+            ),
         );
 
     let matches = app.get_matches_from(args);
     if let Some(ls_args) = matches.subcommand_matches("ls") {
-        let paths = if let Some(values) = ls_args.values_of_os("dirs") {
-            map_os_args_to_path_vec(values)
-        } else {
-            Vec::new()
-        };
+        let paths = ls_args
+            .values_of_os("dirs")
+            .map(map_os_args_to_path_vec)
+            .unwrap_or(Vec::new());
 
         let ls_args = ls::Args {
             paths,
@@ -123,20 +135,18 @@ fn run_with_args(busycrate: &OsStr, args: &[OsString]) -> Option<i32> {
         };
         return Some(ls::main(ls_args));
     } else if let Some(touch_args) = matches.subcommand_matches("touch") {
-        let paths = if let Some(values) = touch_args.values_of_os("files") {
-            map_os_args_to_path_vec(values)
-        } else {
-            Vec::new()
-        };
+        let paths = touch_args
+            .values_of_os("files")
+            .map(map_os_args_to_path_vec)
+            .unwrap_or(Vec::new());
 
         let touch_args = touch::Args { paths };
         return Some(touch::main(touch_args));
     } else if let Some(mkdir_args) = matches.subcommand_matches("mkdir") {
-        let paths = if let Some(values) = mkdir_args.values_of_os("dirs") {
-            map_os_args_to_path_vec(values)
-        } else {
-            Vec::new()
-        };
+        let paths = mkdir_args
+            .values_of_os("dirs")
+            .map(map_os_args_to_path_vec)
+            .unwrap_or(Vec::new());
 
         let mkdir_args = mkdir::Args {
             create_parents: mkdir_args.is_present("parents"),
@@ -144,15 +154,12 @@ fn run_with_args(busycrate: &OsStr, args: &[OsString]) -> Option<i32> {
         };
         return Some(mkdir::main(mkdir_args));
     } else if let Some(rmdir_args) = matches.subcommand_matches("rmdir") {
-        let paths = if let Some(values) = rmdir_args.values_of_os("dirs") {
-            map_os_args_to_path_vec(values)
-        } else {
-            Vec::new()
-        };
+        let paths = rmdir_args
+            .values_of_os("dirs")
+            .map(map_os_args_to_path_vec)
+            .unwrap_or(Vec::new());
 
-        let rmdir_args = rmdir::Args {
-            paths
-        };
+        let rmdir_args = rmdir::Args { paths };
         return Some(rmdir::main(rmdir_args));
     } else {
         print_usage();
