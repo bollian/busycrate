@@ -6,7 +6,6 @@
 
 mod ls;
 mod mkdir;
-mod osstr;
 mod touch;
 
 use std::ffi::{OsStr, OsString};
