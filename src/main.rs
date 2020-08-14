@@ -92,8 +92,9 @@ fn run_with_args(busycrate: &OsStr, args: &[OsString]) -> Option<i32> {
         .about("List directory contents")
         .subcommand(
             SubCommand::with_name("ls")
-                .arg(Arg::with_name("dirs").takes_value(true).multiple(true))
-                .arg(Arg::with_name("all").short("a").long("all")),
+                .arg(Arg::with_name("files").takes_value(true).multiple(true))
+                .arg(Arg::with_name("all").short("a").long("all"))
+                .arg(Arg::with_name("dirnames").short("d"))
         )
         .subcommand(
             SubCommand::with_name("touch").arg(
@@ -125,13 +126,14 @@ fn run_with_args(busycrate: &OsStr, args: &[OsString]) -> Option<i32> {
     let matches = app.get_matches_from(args);
     if let Some(ls_args) = matches.subcommand_matches("ls") {
         let paths = ls_args
-            .values_of_os("dirs")
+            .values_of_os("files")
             .map(map_os_args_to_path_vec)
             .unwrap_or(Vec::new());
 
         let ls_args = ls::Args {
             paths,
             all: ls_args.is_present("all"),
+            shallow_dirs: ls_args.is_present("dirnames"),
         };
         return Some(ls::main(ls_args));
     } else if let Some(touch_args) = matches.subcommand_matches("touch") {

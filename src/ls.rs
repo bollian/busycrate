@@ -6,14 +6,16 @@ use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 use std::ffi::CStr;
 use std::path::{Path, PathBuf};
+use std::mem::forget;
 
 pub struct Args<'a> {
     pub paths: Vec<&'a Path>,
     pub all: bool,
+    pub shallow_dirs: bool,
 }
 
 #[derive(Clone, Copy)]
-pub struct PrintRules {
+struct PrintRules {
     print_hidden: bool,
 }
 
@@ -45,35 +47,69 @@ pub fn main(args: Args) -> i32 {
     };
 
     let mut status = 0;
-    for &dir_name in paths {
-        // the rust standard library filters out '.' and '..' for cross-platform compatibility
-        // reasons, so we turn to the nix crate to actually list out directories
-        let dir = nix::dir::Dir::open(dir_name, OFlag::O_RDONLY, Mode::empty());
+
+    let mut print_shallow = Vec::new(); // print just the provided path, used for testing existence
+    let mut print_contents = Vec::new(); // print directory contents
+
+    // print files first
+    for &fpath in paths {
+        if !fpath.exists() {
+            eprintln!("'{}': No such file or directory", fpath.display());
+        } else if !fpath.is_dir() || args.shallow_dirs {
+            print_shallow.push(fpath);
+        } else { // this is an existing directory
+            print_contents.push(fpath);
+        }
+    }
+
+    for &fpath in print_shallow.iter() {
+        println!("{}", fpath.display());
+    }
+
+    let mut group_spacing = !print_shallow.is_empty();
+    let label_dir_groups = group_spacing || print_contents.len() > 1;
+
+    for &dpath in print_contents.iter() {
+        let dir = nix::dir::Dir::open(dpath, OFlag::O_RDONLY, Mode::empty());
         let mut dir = match dir {
             Ok(dir) => dir,
             Err(e) => {
-                eprintln!("{:?}: {}", dir_name, e);
+                eprintln!("{:?}: {}", dpath, e);
                 status = crate::EXIT_CODE_READ_DIR;
                 continue;
             }
         };
 
+        if group_spacing {
+            println!()
+        }
+        if label_dir_groups {
+            println!("{}:", dpath.display());
+        }
+
         for entry in dir.iter() {
             match entry {
-                Ok(entry) => maybe_print_entry(&entry, print_rules),
-                Err(e) => eprintln!("Error reading {:?}: {}", dir_name, e),
+                Ok(entry) => maybe_print_entry(&entry.file_name(), print_rules),
+                Err(e) => eprintln!("Error reading {}: {}", dpath.display(), e),
             }
         }
+
+        group_spacing = true;
     }
+
+    // the program is short-lived and the OS is gonna clean up after us anyways
+    forget(print_shallow);
+    forget(print_contents);
+
     return status;
 }
 
-fn maybe_print_entry(entry: &nix::dir::Entry, print_rules: PrintRules) {
-    let fname = entry.file_name();
-    if !print_rules.print_hidden && entry_is_hidden(&fname) {
+fn maybe_print_entry(entry: &CStr, print_rules: PrintRules) {
+    if !print_rules.print_hidden && entry_is_hidden(&entry) {
         return;
     }
-    println!("{}", fname.to_string_lossy())
+    // TODO: display CStr without dynamically allocating
+    println!("{}", entry.to_string_lossy())
 }
 
 fn entry_is_hidden(entry_name: &CStr) -> bool {
