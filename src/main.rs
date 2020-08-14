@@ -109,6 +109,10 @@ fn run_with_args(busycrate: &OsStr, args: &[OsString]) -> Option<i32> {
                 .takes_value(true)
                 .multiple(true)
             )
+            .arg(Arg::with_name("parents")
+                .long("parents")
+                .short("p")
+            )
         );
 
     let matches = app.get_matches_from(args);
@@ -143,7 +147,7 @@ fn run_with_args(busycrate: &OsStr, args: &[OsString]) -> Option<i32> {
         };
 
         let mkdir_args = mkdir::Args {
-            create_parents: false,
+            create_parents: mkdir_args.is_present("parents"),
             paths,
         };
         return Some(mkdir::main(mkdir_args))
