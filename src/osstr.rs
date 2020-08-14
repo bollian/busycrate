@@ -51,7 +51,7 @@ mod tests {
     #[test]
     fn empty() {
         let os_str = OsStr::new("");
-        assert!(os_str.has_suffix(""));
+        assert!(os_str.ends_with(""));
     }
 
     #[test]
@@ -59,14 +59,14 @@ mod tests {
         let empty = "";
         let filled = "text";
 
-        assert!(OsStr::new(filled).has_suffix(empty));
-        assert!(!OsStr::new(empty).has_suffix(filled));
+        assert!(OsStr::new(filled).ends_with(empty));
+        assert!(!OsStr::new(empty).ends_with(filled));
     }
 
     #[test]
     fn larger_suffix() {
         let os_str = OsStr::new("text");
-        assert!(!os_str.has_suffix("suffix"));
+        assert!(!os_str.ends_with("suffix"));
     }
 
     #[test]
@@ -74,8 +74,8 @@ mod tests {
         let first = "text";
         let second = "text";
 
-        assert!(OsStr::new(first).has_suffix(second));
-        assert!(OsStr::new(second).has_suffix(first));
+        assert!(OsStr::new(first).ends_with(second));
+        assert!(OsStr::new(second).ends_with(first));
     }
 
     #[test]
@@ -83,8 +83,8 @@ mod tests {
         let larger = "some text";
         let suffix = "text";
 
-        assert!(OsStr::new(larger).has_suffix(suffix));
-        assert!(!OsStr::new(suffix).has_suffix(larger));
+        assert!(OsStr::new(larger).ends_with(suffix));
+        assert!(!OsStr::new(suffix).ends_with(larger));
     }
 
     #[cfg(unix)]
@@ -95,9 +95,9 @@ mod tests {
         let text = b"text\xff";
         let suffix = "ext";
 
-        assert!(!OsStr::from_bytes(text).has_suffix(suffix));
+        assert!(!OsStr::from_bytes(text).ends_with(suffix));
 
         // invalid thanks to the type system
-        // assert!(!OsStr::new(suffix).has_suffix(text));
+        // assert!(!OsStr::new(suffix).ends_with(text));
     }
 }
