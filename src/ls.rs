@@ -2,10 +2,10 @@
  *  * License, v. 2.0. If a copy of the MPL was not distributed with this
  *   * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-use std::ffi::CStr;
-use std::path::{Path, PathBuf};
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
+use std::ffi::CStr;
+use std::path::{Path, PathBuf};
 
 pub struct Args<'a> {
     pub paths: Vec<&'a Path>,
@@ -54,7 +54,7 @@ pub fn main(args: Args) -> i32 {
             Err(e) => {
                 eprintln!("{:?}: {}", dir_name, e);
                 status = crate::EXIT_CODE_READ_DIR;
-                continue
+                continue;
             }
         };
 
@@ -65,13 +65,13 @@ pub fn main(args: Args) -> i32 {
             }
         }
     }
-    return status
+    return status;
 }
 
 fn maybe_print_entry(entry: &nix::dir::Entry, print_rules: PrintRules) {
     let fname = entry.file_name();
     if !print_rules.print_hidden && entry_is_hidden(&fname) {
-        return
+        return;
     }
     println!("{}", fname.to_string_lossy())
 }

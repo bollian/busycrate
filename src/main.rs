@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+#![allow(clippy::needless_return)]
+
 mod ls;
 mod mkdir;
 mod osstr;
@@ -20,30 +22,30 @@ const EXIT_CODE_UNKNOWN_ERR: i32 = 255;
 fn main() {
     match main_code() {
         Some(exit_code) => std::process::exit(exit_code),
-        None => return
+        None => return,
     }
 }
 
 fn main_code() -> Option<i32> {
     let mut args: Vec<_> = std::env::args_os().collect();
-    if args.len() == 0 {
+    if args.is_empty() {
         print_usage();
-        return Some(EXIT_CODE_INVALID_USAGE)
+        return Some(EXIT_CODE_INVALID_USAGE);
     } else {
         let cmd = match executable_name(&args[0]) {
             Some(cmd) => cmd,
             None => {
                 print_usage();
-                return Some(EXIT_CODE_INVALID_USAGE)
+                return Some(EXIT_CODE_INVALID_USAGE);
             }
         };
 
         if cmd == "busycrate" {
             if args.len() < 2 {
                 print_usage();
-                return None
+                return None;
             }
-            return run_with_args(cmd, &args[1..])
+            return run_with_args(cmd, &args[1..]);
         } else {
             if let Some(exe) = executable_name(&args[0]) {
                 // If we were executed using a file path, like '/usr/bin/ls', clap won't recognize
@@ -53,7 +55,7 @@ fn main_code() -> Option<i32> {
                 let cmd_name = exe.to_os_string();
                 args[0] = cmd_name;
             }
-            return run_with_args(OsStr::new("busycrate"), &args[0..])
+            return run_with_args(OsStr::new("busycrate"), &args[0..]);
         }
     }
 }
@@ -68,7 +70,7 @@ fn executable_name(first_cli_arg: &OsStr) -> Option<&OsStr> {
         Some(c) => c,
         None => {
             eprintln!("{}: not a command", cmd.display());
-            return None
+            return None;
         }
     };
     Some(cmd)
@@ -88,31 +90,19 @@ fn run_with_args(busycrate: &OsStr, args: &[OsString]) -> Option<i32> {
         .version(clap::crate_version!())
         .author(clap::crate_authors!("\n"))
         .about("List directory contents")
-        .subcommand(SubCommand::with_name("ls")
-            .arg(Arg::with_name("dirs")
-                .takes_value(true)
-                .multiple(true)
-            )
-            .arg(Arg::with_name("all")
-                .short("a")
-                .long("all")
-            )
+        .subcommand(
+            SubCommand::with_name("ls")
+                .arg(Arg::with_name("dirs").takes_value(true).multiple(true))
+                .arg(Arg::with_name("all").short("a").long("all")),
         )
-        .subcommand(SubCommand::with_name("touch")
-            .arg(Arg::with_name("fpaths")
-                .takes_value(true)
-                .multiple(true)
-            )
+        .subcommand(
+            SubCommand::with_name("touch")
+                .arg(Arg::with_name("fpaths").takes_value(true).multiple(true)),
         )
-        .subcommand(SubCommand::with_name("mkdir")
-            .arg(Arg::with_name("dpaths")
-                .takes_value(true)
-                .multiple(true)
-            )
-            .arg(Arg::with_name("parents")
-                .long("parents")
-                .short("p")
-            )
+        .subcommand(
+            SubCommand::with_name("mkdir")
+                .arg(Arg::with_name("dpaths").takes_value(true).multiple(true))
+                .arg(Arg::with_name("parents").long("parents").short("p")),
         );
 
     let matches = app.get_matches_from(args);
@@ -127,19 +117,17 @@ fn run_with_args(busycrate: &OsStr, args: &[OsString]) -> Option<i32> {
             paths,
             all: ls_args.is_present("all"),
         };
-        return Some(ls::main(ls_args))
-    } if let Some(touch_args) = matches.subcommand_matches("touch") {
+        return Some(ls::main(ls_args));
+    } else if let Some(touch_args) = matches.subcommand_matches("touch") {
         let paths = if let Some(values) = touch_args.values_of_os("fpaths") {
             map_os_args_to_path_vec(values)
         } else {
             Vec::new()
         };
 
-        let touch_args = touch::Args {
-            paths
-        };
-        return Some(touch::main(touch_args))
-    } if let Some(mkdir_args) = matches.subcommand_matches("mkdir") {
+        let touch_args = touch::Args { paths };
+        return Some(touch::main(touch_args));
+    } else if let Some(mkdir_args) = matches.subcommand_matches("mkdir") {
         let paths = if let Some(values) = mkdir_args.values_of_os("dpaths") {
             map_os_args_to_path_vec(values)
         } else {
@@ -150,14 +138,16 @@ fn run_with_args(busycrate: &OsStr, args: &[OsString]) -> Option<i32> {
             create_parents: mkdir_args.is_present("parents"),
             paths,
         };
-        return Some(mkdir::main(mkdir_args))
+        return Some(mkdir::main(mkdir_args));
     } else {
         print_usage();
-        return Some(1)
+        return Some(1);
     }
 }
 
 fn print_usage() {
-    println!("Usage: busycrate [--help] <command> [options]
-                     <command> [options]");
+    println!(
+        "Usage: busycrate [--help] <command> [options]
+                     <command> [options]"
+    );
 }

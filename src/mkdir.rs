@@ -73,5 +73,6 @@ pub fn main(args: Args) -> i32 {
             }
         }
     }
-    return status;
+
+    status
 }

@@ -19,7 +19,7 @@ impl OsStrHelperExt for OsStr {
         use std::os::unix::ffi::OsStrExt;
 
         if suffix.len() > self.len() {
-            return false
+            return false;
         }
 
         let suffix_bytes = suffix.as_bytes();
@@ -33,7 +33,7 @@ impl OsStrHelperExt for OsStr {
         use std::os::unix::ffi::OsStrExt;
 
         if prefix.len() > self.len() {
-            return false
+            return false;
         }
 
         let prefix_bytes = prefix.as_bytes();
@@ -45,8 +45,8 @@ impl OsStrHelperExt for OsStr {
 
 #[cfg(test)]
 mod tests {
-    use std::ffi::OsStr;
     use super::*;
+    use std::ffi::OsStr;
 
     #[test]
     fn empty() {
