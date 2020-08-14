@@ -7,6 +7,7 @@
 mod ls;
 mod mkdir;
 mod touch;
+mod rmdir;
 
 use std::ffi::{OsStr, OsString};
 use std::path::Path;
@@ -102,6 +103,10 @@ fn run_with_args(busycrate: &OsStr, args: &[OsString]) -> Option<i32> {
             SubCommand::with_name("mkdir")
                 .arg(Arg::with_name("dpaths").takes_value(true).multiple(true))
                 .arg(Arg::with_name("parents").long("parents").short("p")),
+        )
+        .subcommand(
+            SubCommand::with_name("rmdir")
+                .arg(Arg::with_name("dirs").takes_value(true).multiple(true))
         );
 
     let matches = app.get_matches_from(args);
@@ -138,6 +143,17 @@ fn run_with_args(busycrate: &OsStr, args: &[OsString]) -> Option<i32> {
             paths,
         };
         return Some(mkdir::main(mkdir_args));
+    } else if let Some(rmdir_args) = matches.subcommand_matches("rmdir") {
+        let paths = if let Some(values) = rmdir_args.values_of_os("dirs") {
+            map_os_args_to_path_vec(values)
+        } else {
+            Vec::new()
+        };
+
+        let rmdir_args = rmdir::Args {
+            paths
+        };
+        return Some(rmdir::main(rmdir_args));
     } else {
         print_usage();
         return Some(1);
