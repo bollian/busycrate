@@ -11,6 +11,7 @@ mod touch;
 
 use std::ffi::{OsStr, OsString};
 use std::path::Path;
+use std::fmt::Display;
 
 const EXIT_CODE_INVALID_USAGE: i32 = 1;
 const EXIT_CODE_NO_CWD: i32 = 2;
@@ -97,12 +98,23 @@ fn run_with_args(busycrate: &OsStr, args: &[OsString]) -> Option<i32> {
                 .arg(Arg::with_name("dirnames").short("d"))
         )
         .subcommand(
-            SubCommand::with_name("touch").arg(
-                Arg::with_name("files")
-                    .takes_value(true)
-                    .multiple(true)
-                    .required(true),
-            ),
+            SubCommand::with_name("touch")
+                .args(&[
+                    Arg::with_name("files")
+                        .takes_value(true)
+                        .multiple(true)
+                        .required(true),
+                    Arg::with_name("no-create")
+                        .short("c")
+                        .long("no-create")
+                        .takes_value(false),
+                    Arg::with_name("atime-only")
+                        .short("a")
+                        .takes_value(false),
+                    Arg::with_name("mtime-only")
+                        .short("m")
+                        .takes_value(false)
+                ])
         )
         .subcommand(
             SubCommand::with_name("mkdir")
@@ -142,8 +154,19 @@ fn run_with_args(busycrate: &OsStr, args: &[OsString]) -> Option<i32> {
             .map(map_os_args_to_path_vec)
             .unwrap_or(Vec::new());
 
-        let touch_args = touch::Args { paths };
-        return Some(touch::main(touch_args));
+        let create = !touch_args.is_present("no-create");
+        let mtime_only = touch_args.is_present("mtime-only");
+        let atime_only = touch_args.is_present("atime-only");
+        let atime = atime_only || !mtime_only;
+        let mtime = mtime_only || !atime_only;
+
+        let touch_args = touch::Args {
+            paths,
+            create,
+            atime,
+            mtime,
+        };
+        return Some(touch::main(touch_args) as i32);
     } else if let Some(mkdir_args) = matches.subcommand_matches("mkdir") {
         let paths = mkdir_args
             .values_of_os("dirs")
@@ -174,4 +197,36 @@ fn print_usage() {
         "Usage: busycrate [--help] <command> [options]
                      <command> [options]"
     );
+}
+
+/// Common exit codes across all commands
+#[repr(i32)]
+pub enum ExitCode {
+    Success = 0,
+    InvalidUsage = 1,
+    NoCwd = 2,
+    ReadDir = 3,
+    Stat = 4,
+    Time = 5,
+    UnknownErr = 255,
+}
+
+pub struct FdPathDropper<P: Display>(i32, P);
+
+impl<P: Display> FdPathDropper<P> {
+    pub fn new(fd: i32, fpath: P) -> Self {
+        Self(fd, fpath)
+    }
+}
+
+impl<P: Display> Drop for FdPathDropper<P> {
+    fn drop(&mut self) {
+        if let Err(e) = nix::unistd::close(self.0) {
+            eprintln!("Error closing file '{}': {}", self.1, e);
+            // don't set the status code here since, really, the fd will be closed regardless of
+            // any error. The stderr message is here just to let the user know that _something_
+            // happened. If we were writing anything to the file, there would be potential for
+            // dataloss, but we aren't, so we don't care.
+        }
+    }
 }

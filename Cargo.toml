@@ -16,7 +16,8 @@ keywords = ["cli", "utility", "unix"]
 
 [dependencies]
 clap = "^2.33"
-nix = "0.17.0"
+libc = "*" # use whatever nix uses
+nix = "^0.19.1"
 
 [profile.release]
 lto = true
