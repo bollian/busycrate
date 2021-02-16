@@ -91,6 +91,9 @@ fn run_with_args(busycrate: &OsStr, args: &[OsString]) -> Option<i32> {
         .version(clap::crate_version!())
         .author(clap::crate_authors!("\n"))
         .about("List directory contents")
+        // these commands are often logged, written to files, etc.
+        // color is usually unnecessary and potentially harmful
+        .global_setting(clap::AppSettings::ColorNever)
         .subcommand(
             SubCommand::with_name("ls")
                 .arg(Arg::with_name("files").takes_value(true).multiple(true))
