@@ -97,13 +97,23 @@ fn run_with_args(busycrate: &OsStr, args: &[OsString]) -> Option<i32> {
         .subcommand(
             SubCommand::with_name("ls")
                 .about("List directory contents")
-                .arg(Arg::with_name("files").takes_value(true).multiple(true))
-                .arg(Arg::with_name("all").short("a").long("all"))
-                .arg(Arg::with_name("dirnames").short("d"))
+                .args(&[
+                    Arg::with_name("files")
+                        .takes_value(true)
+                        .multiple(true),
+                    Arg::with_name("all")
+                        .short("a")
+                        .long("all")
+                        .help("List hidden files"),
+                    Arg::with_name("dirnames")
+                        .short("d")
+                        .long("directory")
+                        .help("List directory names, not their contents"),
+                ])
         )
         .subcommand(
             SubCommand::with_name("touch")
-                .about("Create files")
+                .about("Create files and update their modified or access times")
                 .args(&[
                     Arg::with_name("files")
                         .takes_value(true)
@@ -112,25 +122,30 @@ fn run_with_args(busycrate: &OsStr, args: &[OsString]) -> Option<i32> {
                     Arg::with_name("no-create")
                         .short("c")
                         .long("no-create")
-                        .takes_value(false),
+                        .help("Do not create any files"),
                     Arg::with_name("atime-only")
                         .short("a")
-                        .takes_value(false),
+                        .long("atime")
+                        .help("Only update atime"),
                     Arg::with_name("mtime-only")
                         .short("m")
-                        .takes_value(false)
+                        .long("mtime")
+                        .help("Only update mtime")
                 ])
         )
         .subcommand(
             SubCommand::with_name("mkdir")
                 .about("Create directories")
-                .arg(
+                .args(&[
                     Arg::with_name("dirs")
                         .takes_value(true)
                         .multiple(true)
                         .required(true),
-                )
-                .arg(Arg::with_name("parents").long("parents").short("p")),
+                    Arg::with_name("parents")
+                        .short("p")
+                        .long("parents")
+                        .help("Create parent directories if they don't exist")
+                ]),
         )
         .subcommand(
             SubCommand::with_name("rmdir")
