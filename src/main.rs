@@ -90,18 +90,20 @@ fn run_with_args(busycrate: &OsStr, args: &[OsString]) -> Option<i32> {
     let app = App::new("BusyCrate")
         .version(clap::crate_version!())
         .author(clap::crate_authors!("\n"))
-        .about("List directory contents")
+        .about("Collection of Unix utilities")
         // these commands are often logged, written to files, etc.
         // color is usually unnecessary and potentially harmful
         .global_setting(clap::AppSettings::ColorNever)
         .subcommand(
             SubCommand::with_name("ls")
+                .about("List directory contents")
                 .arg(Arg::with_name("files").takes_value(true).multiple(true))
                 .arg(Arg::with_name("all").short("a").long("all"))
                 .arg(Arg::with_name("dirnames").short("d"))
         )
         .subcommand(
             SubCommand::with_name("touch")
+                .about("Create files")
                 .args(&[
                     Arg::with_name("files")
                         .takes_value(true)
@@ -121,6 +123,7 @@ fn run_with_args(busycrate: &OsStr, args: &[OsString]) -> Option<i32> {
         )
         .subcommand(
             SubCommand::with_name("mkdir")
+                .about("Create directories")
                 .arg(
                     Arg::with_name("dirs")
                         .takes_value(true)
@@ -130,12 +133,14 @@ fn run_with_args(busycrate: &OsStr, args: &[OsString]) -> Option<i32> {
                 .arg(Arg::with_name("parents").long("parents").short("p")),
         )
         .subcommand(
-            SubCommand::with_name("rmdir").arg(
-                Arg::with_name("dirs")
-                    .takes_value(true)
-                    .multiple(true)
-                    .required(true),
-            ),
+            SubCommand::with_name("rmdir")
+                .about("Remove empty directories")
+                .arg(
+                    Arg::with_name("dirs")
+                        .takes_value(true)
+                        .multiple(true)
+                        .required(true),
+                ),
         );
 
     let matches = app.get_matches_from(args);
